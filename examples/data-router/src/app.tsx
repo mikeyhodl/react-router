@@ -1,14 +1,12 @@
-import React from "react";
+import * as React from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
 import {
   Await,
   createBrowserRouter,
-  createRoutesFromElements,
   defer,
   Form,
   Link,
   Outlet,
-  Route,
   RouterProvider,
   useAsyncError,
   useAsyncValue,
@@ -26,27 +24,38 @@ import { addTodo, deleteTodo, getTodos } from "./todos";
 
 import "./index.css";
 
-let router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/" element={<Layout />}>
-      <Route index loader={homeLoader} element={<Home />} />
-      <Route
-        path="todos"
-        action={todosAction}
-        loader={todosLoader}
-        element={<TodosList />}
-        errorElement={<TodosBoundary />}
-      >
-        <Route path=":id" loader={todoLoader} element={<Todo />} />
-      </Route>
-      <Route
-        path="deferred"
-        loader={deferredLoader}
-        element={<DeferredPage />}
-      />
-    </Route>
-  )
-);
+let router = createBrowserRouter([
+  {
+    path: "/",
+    Component: Layout,
+    children: [
+      {
+        index: true,
+        loader: homeLoader,
+        Component: Home,
+      },
+      {
+        path: "todos",
+        action: todosAction,
+        loader: todosLoader,
+        Component: TodosList,
+        ErrorBoundary: TodosBoundary,
+        children: [
+          {
+            path: ":id",
+            loader: todoLoader,
+            Component: Todo,
+          },
+        ],
+      },
+      {
+        path: "deferred",
+        loader: deferredLoader,
+        Component: DeferredPage,
+      },
+    ],
+  },
+]);
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => router.dispose());
@@ -72,6 +81,7 @@ export function Layout() {
   let fetcherInProgress = fetchers.some((f) =>
     ["loading", "submitting"].includes(f.state)
   );
+
   return (
     <>
       <h1>Data Router Example</h1>
